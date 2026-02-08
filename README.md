@@ -1,0 +1,2 @@
+# config
+bamgoo config module.
