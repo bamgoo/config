@@ -64,7 +64,7 @@ func (c *Module) Config(Map) {}
 func (c *Module) Setup()     {}
 func (c *Module) Open()      {}
 func (c *Module) Start() {
-	fmt.Println("config module is running.")
+	fmt.Printf("bamgoo config module is running with %d drivers.\n", len(c.drivers))
 }
 func (c *Module) Stop()  {}
 func (c *Module) Close() {}
