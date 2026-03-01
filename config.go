@@ -175,11 +175,11 @@ func (c *Module) parseArgs() Map {
 }
 
 func defaultConfigFile() string {
-	candidates := []string{"config.toml", "config.json"}
+	candidates := []string{"config.toml", "config.json", "config.yaml", "config.yml"}
 
 	if exe := filepath.Base(os.Args[0]); exe != "" {
 		name := strings.TrimSuffix(exe, filepath.Ext(exe))
-		candidates = append(candidates, name+".toml", name+".json")
+		candidates = append(candidates, name+".toml", name+".json", name+".yaml", name+".yml")
 	}
 
 	for _, file := range candidates {

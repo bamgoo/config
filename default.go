@@ -5,9 +5,11 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/bamgoo/bamgoo"
 	. "github.com/bamgoo/base"
@@ -44,6 +46,8 @@ func (d *defaultConfigDriver) Load(params Map) (Map, error) {
 			format = "json"
 		case ".toml", ".tml":
 			format = "toml"
+		case ".yaml", ".yml":
+			format = "yaml"
 		}
 	}
 	if format == "" {
@@ -66,6 +70,11 @@ func decodeConfig(data []byte, format string) (Map, error) {
 			return nil, err
 		}
 		return out, nil
+	case "yaml", "yml":
+		if err := yaml.Unmarshal(data, &out); err != nil {
+			return nil, err
+		}
+		return out, nil
 	default:
 		return nil, errors.New("Unknown config format: " + format)
 	}
@@ -76,5 +85,26 @@ func detectFormat(data []byte) string {
 	if strings.HasPrefix(s, "{") || strings.HasPrefix(s, "[") {
 		return "json"
 	}
+	if looksLikeToml(s) {
+		return "toml"
+	}
+	if looksLikeYaml(s) {
+		return "yaml"
+	}
 	return "toml"
+}
+
+var (
+	tomlKeyValPattern = regexp.MustCompile(`(?m)^\s*[\w\.\-]+\s*=`)
+	tomlSection       = regexp.MustCompile(`(?m)^\s*\[[^\]]+\]\s*$`)
+	yamlKeyValPattern = regexp.MustCompile(`(?m)^\s*[\w\.\-]+\s*:\s*`)
+	yamlListPattern   = regexp.MustCompile(`(?m)^\s*-\s+`)
+)
+
+func looksLikeToml(s string) bool {
+	return tomlKeyValPattern.MatchString(s) || tomlSection.MatchString(s)
+}
+
+func looksLikeYaml(s string) bool {
+	return yamlKeyValPattern.MatchString(s) || yamlListPattern.MatchString(s)
 }
