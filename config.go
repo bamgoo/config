@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bamgoo/bamgoo"
-	. "github.com/bamgoo/base"
+	"github.com/infrago/infra"
+	. "github.com/infrago/base"
 )
 
 const (
-	configEnvPrefix = "BAMGOO_"
+	configEnvPrefix = "INFRAGO_"
 
-	KEY  = "bamgoo-config"
+	KEY  = "infrago-config"
 	JSON = "json"
 	TOML = "toml"
 	YAML = "yaml"
@@ -27,7 +27,7 @@ var (
 
 var (
 	module = &Module{drivers: map[string]Driver{}}
-	host   = bamgoo.Mount(module)
+	host   = infra.Mount(module)
 )
 
 type (
@@ -48,7 +48,7 @@ func (c *Module) Register(name string, value Any) {
 
 func (c *Module) RegisterDriver(name string, driver Driver) {
 	if name == "" {
-		name = bamgoo.DEFAULT
+		name = infra.DEFAULT
 	}
 	if driver == nil {
 		panic("Invalid config driver: " + name)
@@ -64,7 +64,7 @@ func (c *Module) Config(Map) {}
 func (c *Module) Setup()     {}
 func (c *Module) Open()      {}
 func (c *Module) Start() {
-	fmt.Printf("bamgoo config module is running with %d drivers.\n", len(c.drivers))
+	fmt.Printf("infrago config module is running with %d drivers.\n", len(c.drivers))
 }
 func (c *Module) Stop()  {}
 func (c *Module) Close() {}
@@ -90,7 +90,7 @@ func (c *Module) LoadConfig() (Map, error) {
 	return cfg, err
 }
 
-// Parse reads env (BAMGOO_*) then args (--key) and returns params + driver name.
+// Parse reads env (INFRAGO_*) then args (--key) and returns params + driver name.
 func (c *Module) Parse() (string, Map, error) {
 	params := Map{}
 
@@ -103,13 +103,13 @@ func (c *Module) Parse() (string, Map, error) {
 		params[k] = v
 	}
 
-	driver := bamgoo.DEFAULT
+	driver := infra.DEFAULT
 	if v, ok := params["driver"].(string); ok && v != "" {
 		driver = v
 	}
 
 	if driver == "" {
-		driver = bamgoo.DEFAULT
+		driver = infra.DEFAULT
 		params["file"] = defaultConfigFile()
 	}
 
@@ -141,7 +141,7 @@ func (c *Module) parseArgs() Map {
 	params := Map{}
 
 	if len(args) == 1 {
-		params["driver"] = bamgoo.DEFAULT
+		params["driver"] = infra.DEFAULT
 		params["file"] = args[0]
 		return params
 	}

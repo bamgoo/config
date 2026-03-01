@@ -1,4 +1,4 @@
-module github.com/bamgoo/config
+module github.com/infrago/config
 
 go 1.25.3
 

@@ -1,2 +1,2 @@
 # config
-bamgoo config module.
+infrago config module.
