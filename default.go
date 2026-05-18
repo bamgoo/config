@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,8 +12,8 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"gopkg.in/yaml.v3"
 
-	"github.com/infrago/infra"
 	. "github.com/infrago/base"
+	"github.com/infrago/infra"
 )
 
 type defaultConfigDriver struct{}
@@ -22,7 +23,7 @@ func init() {
 }
 
 func (d *defaultConfigDriver) Load(params Map) (Map, error) {
-	file := "config.toml"
+	file := ""
 	if vv, ok := params["file"].(string); ok {
 		file = vv
 	}
@@ -32,34 +33,37 @@ func (d *defaultConfigDriver) Load(params Map) (Map, error) {
 	if vv, ok := params["config"].(string); ok {
 		file = vv
 	}
+	if file == "" {
+		file = defaultConfigFile()
+	}
+	if file == "" {
+		return nil, nil
+	}
 
 	data, err := os.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read config file %q: %w", file, err)
 	}
 
 	format, _ := params["format"].(string)
 	if format == "" {
-		ext := strings.ToLower(filepath.Ext(file))
-		switch ext {
-		case ".json":
-			format = "json"
-		case ".toml", ".tml":
-			format = "toml"
-		case ".yaml", ".yml":
-			format = "yaml"
-		}
+		format = FormatFromPath(file)
 	}
 	if format == "" {
-		format = detectFormat(data)
+		format = DetectFormat(data)
 	}
 
-	return decodeConfig(data, format)
+	return Decode(data, format)
 }
 
-func decodeConfig(data []byte, format string) (Map, error) {
+func Decode(data []byte, format string) (Map, error) {
+	if strings.TrimSpace(string(data)) == "" {
+		return Map{}, nil
+	}
+
+	format = strings.ToLower(strings.TrimSpace(format))
 	var out Map
-	switch strings.ToLower(format) {
+	switch format {
 	case "json":
 		if err := json.Unmarshal(data, &out); err != nil {
 			return nil, err
@@ -80,8 +84,11 @@ func decodeConfig(data []byte, format string) (Map, error) {
 	}
 }
 
-func detectFormat(data []byte) string {
+func DetectFormat(data []byte) string {
 	s := strings.TrimSpace(string(data))
+	if s == "" {
+		return ""
+	}
 	if strings.HasPrefix(s, "{") || strings.HasPrefix(s, "[") {
 		return "json"
 	}
@@ -92,6 +99,19 @@ func detectFormat(data []byte) string {
 		return "yaml"
 	}
 	return "toml"
+}
+
+func FormatFromPath(file string) string {
+	ext := strings.ToLower(filepath.Ext(file))
+	switch ext {
+	case ".json":
+		return "json"
+	case ".toml", ".tml":
+		return "toml"
+	case ".yaml", ".yml":
+		return "yaml"
+	}
+	return ""
 }
 
 var (
