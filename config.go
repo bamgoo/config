@@ -79,7 +79,7 @@ func (c *Module) Config(Map) {}
 func (c *Module) Setup()     {}
 func (c *Module) Open()      {}
 func (c *Module) Start() {
-	fmt.Printf("infrago config module is running with %d drivers.\n", len(c.drivers))
+	infra.Log(infra.LogLevelInfo, "config", "module started", Map{"drivers": len(c.drivers)})
 }
 func (c *Module) Stop()  {}
 func (c *Module) Close() {}
